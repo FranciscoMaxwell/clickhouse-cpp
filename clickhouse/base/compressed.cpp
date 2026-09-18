@@ -82,6 +82,10 @@ bool CompressedInput::Decompress() {
         throw CompressionError("compressed data too big");
     }
 
+    if (compressed < HEADER_SIZE) {
+        throw CompressionError("compressed data too small");
+    }
+
     Buffer tmp(compressed);
 
     // Data header
