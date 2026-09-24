@@ -313,7 +313,7 @@ inline auto convertValueForGetItem(const ColumnType& col, ValueType&& t) {
             || std::is_same_v<T, clickhouse::Int128>) {
         return std::string_view{reinterpret_cast<const char*>(&t), sizeof(T)};
     } else if constexpr (std::is_same_v<T, in_addr>) {
-        return htonl(t.s_addr);
+        return t.s_addr;
     } else if constexpr (std::is_same_v<T, in6_addr>) {
         return std::string_view(reinterpret_cast<const char*>(t.s6_addr), 16);
     } else if constexpr (std::is_same_v<ColumnType, ColumnDate>) {

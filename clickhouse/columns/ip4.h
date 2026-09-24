@@ -27,7 +27,7 @@ public:
     /// @params ip numeric value with host byte order.
     void Append(uint32_t ip);
 
-    ///
+    /// @params ip IPv4 address in network byte order.
     void Append(in_addr ip);
 
     /// Returns element at given row number.

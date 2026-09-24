@@ -954,7 +954,7 @@ TEST(ColumnsCase, ColumnIPv4)
 
     col.Append("255.255.255.255");
     col.Append("127.0.0.1");
-    col.Append(3585395774);
+    col.Append(0x3eccb4d5);
     col.Append(0);
     const in_addr ip = MakeIPv4(0x12345678);
     col.Append(ip);
@@ -962,7 +962,7 @@ TEST(ColumnsCase, ColumnIPv4)
     ASSERT_EQ(5u, col.Size());
     EXPECT_EQ(MakeIPv4(0xffffffff), col.At(0));
     EXPECT_EQ(MakeIPv4(0x0100007f), col.At(1));
-    EXPECT_EQ(MakeIPv4(3585395774), col.At(2));
+    EXPECT_EQ(MakeIPv4(0xd5b4cc3e), col.At(2));
     EXPECT_EQ(MakeIPv4(0),          col.At(3));
     EXPECT_EQ(ip,                  col.At(4));
 
@@ -974,6 +974,42 @@ TEST(ColumnsCase, ColumnIPv4)
 
     col.Clear();
     EXPECT_EQ(0u, col.Size());
+}
+
+TEST(ColumnsCase, ColumnIPv4_append_overloads_use_same_byte_order)
+{
+    auto from_string = ColumnIPv4();
+    auto from_host_order = ColumnIPv4();
+    auto from_in_addr = ColumnIPv4();
+
+    in_addr parsed{};
+    ASSERT_EQ(1, inet_pton(AF_INET, "127.0.0.1", &parsed));
+
+    from_string.Append("127.0.0.1");
+    from_host_order.Append(0x7f000001);
+    from_in_addr.Append(parsed);
+
+    Buffer string_data;
+    Buffer host_order_data;
+    Buffer in_addr_data;
+
+    BufferOutput string_output(&string_data);
+    BufferOutput host_order_output(&host_order_data);
+    BufferOutput in_addr_output(&in_addr_data);
+
+    from_string.SaveBody(&string_output);
+    from_host_order.SaveBody(&host_order_output);
+    from_in_addr.SaveBody(&in_addr_output);
+
+    string_output.Flush();
+    host_order_output.Flush();
+    in_addr_output.Flush();
+
+    EXPECT_EQ(host_order_data, string_data);
+    EXPECT_EQ(host_order_data, in_addr_data);
+    EXPECT_EQ("127.0.0.1", from_string.AsString(0));
+    EXPECT_EQ("127.0.0.1", from_host_order.AsString(0));
+    EXPECT_EQ("127.0.0.1", from_in_addr.AsString(0));
 }
 
 TEST(ColumnsCase, ColumnIPv4_construct_from_data)
@@ -1008,7 +1044,7 @@ TEST(ColumnsCase, ColumnIPv4_construct_from_data)
 
         EXPECT_EQ(values.size(), col.Size());
         for (size_t i = 0; i < values.size(); ++i) {
-            EXPECT_EQ(ntohl(values[i]), col[i]) << " At pos: " << i;
+            EXPECT_EQ(values[i], col[i]) << " At pos: " << i;
         }
 
         // Make sure that `Append` and `At`/`[]` work properly
@@ -1041,9 +1077,9 @@ TEST(ColumnsCase, ColumnIPv4_construct_from_rvalue_data) {
     };
 
     const auto expected = {
-        MakeIPv4(data[0]),
-        MakeIPv4(data[1]),
-        MakeIPv4(data[2]),
+        MakeIPv4(htonl(data[0])),
+        MakeIPv4(htonl(data[1])),
+        MakeIPv4(htonl(data[2])),
     };
 
     auto col = ColumnIPv4(std::move(data));

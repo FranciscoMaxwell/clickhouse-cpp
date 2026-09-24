@@ -32,7 +32,7 @@ void ColumnIPv4::Append(const std::string& str) {
     uint32_t address;
     if (inet_pton(AF_INET, str.c_str(), &address) != 1)
         throw ValidationError("invalid IPv4 format, ip: " + str);
-    data_->Append(htonl(address));
+    data_->Append(address);
 }
 
 void ColumnIPv4::Append(uint32_t ip) {
@@ -40,7 +40,7 @@ void ColumnIPv4::Append(uint32_t ip) {
 }
 
 void ColumnIPv4::Append(in_addr ip) {
-    data_->Append(htonl(ip.s_addr));
+    data_->Append(ip.s_addr);
 }
 
 void ColumnIPv4::Clear() {
@@ -49,13 +49,13 @@ void ColumnIPv4::Clear() {
 
 in_addr ColumnIPv4::At(size_t n) const {
     in_addr addr;
-    addr.s_addr = ntohl(data_->At(n));
+    addr.s_addr = data_->At(n);
     return addr;
 }
 
 in_addr ColumnIPv4::operator [] (size_t n) const {
     in_addr addr;
-    addr.s_addr = ntohl(data_->operator[](n));
+    addr.s_addr = data_->operator[](n);
     return addr;
 }
 

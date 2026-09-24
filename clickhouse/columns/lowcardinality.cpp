@@ -233,8 +233,8 @@ inline void AppendToDictionary(Column& dictionary, const ItemView & item) {
             column_down_cast<ColumnDateTime>(dictionary).AppendRaw(item.get<uint32_t>());
             return;
         case Type::IPv4:
-            // ColumnIPv4::Append applies htonl, and GetItem returns the stored
-            // (already byte-swapped) value, so undo the swap to re-store as-is.
+            // ColumnIPv4::Append(uint32_t) accepts host byte order, while GetItem
+            // returns the stored network-order representation.
             column_down_cast<ColumnIPv4>(dictionary).Append(ntohl(item.get<uint32_t>()));
             return;
         case Type::IPv6: {
